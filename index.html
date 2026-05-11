@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Monitorizare Etichete</title>
+
+<style>
+    body {
+        font-family: "Segoe UI", Arial, sans-serif;
+        background: #eef1f5;
+        padding: 20px;
+    }
+
+    h2 {
+        text-align: center;
+        margin-bottom: 20px;
+        color: #333;
+    }
+
+    .btn {
+        padding: 12px 25px;
+        background: #0078ff;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 16px;
+        cursor: pointer;
+        margin-bottom: 20px;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        transition: 0.2s;
+    }
+
+    .btn:hover {
+        background: #005fcc;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    th {
+        background: #0078ff;
+        color: white;
+        padding: 10px;
+        font-size: 15px;
+    }
+
+    td {
+        padding: 10px;
+        border-bottom: 1px solid #ddd;
+        font-size: 14px;
+    }
+
+    tr:hover {
+        background: #f5faff;
+    }
+
+    input {
+        width: 80px;
+        padding: 6px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        text-align: center;
+    }
+
+    .ok {
+        background: #d4f8d4 !important;
+    }
+
+    .bad {
+        background: #ffd6d6 !important;
+    }
+
+    .status-ok {
+        color: #0a8a0a;
+        font-weight: bold;
+    }
+
+    .status-bad {
+        color: #d40000;
+        font-weight: bold;
+    }
+
+    .empty {
+        color: #888;
+        font-style: italic;
+    }
+</style>
+</head>
+<body>
+
+<h2>Monitorizare Etichete – UI Premium</h2>
+
+<button class="btn" onclick="actualizeazaZiua()">Actualizează ziua</button>
+
+<table>
+    <thead>
+        <tr>
+            <th>Etichetă</th>
+            <th>Inventar</th>
+            <th>Tura</th>
+            <th>Buc/Tura</th>
+            <th>Consum/zi</th>
+            <th>Stoc Zilnic</th>
+            <th>Zile</th>
+            <th>Săptămâni</th>
+            <th>Status</th>
+            <th>Comandă pt 5 săpt.</th>
+        </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+</table>
+
+<script>
+let data = [
+  { name:"ET. VIRSLI 43X200", tura:"1T", buc:110, consum:0 },
+  { name:"ET.VIRSLI PLC 110X132", tura:"1T", buc:110, consum:0 },
+  { name:"ET. C-TI BICAZ 86X130", tura:"1T", buc:50, consum:0 },
+  { name:"ET. C-TI CU SUNCA 154X40", tura:"1T", buc:48, consum:0 },
+  { name:"ET. C-TI CU SUNCA 86X130", tura:"1T", buc:48, consum:0 },
+  { name:"ET. CABANOS 154X40", tura:"1T", buc:50, consum:0 },
+  { name:"ET. CABANOS 86X130", tura:"1T", buc:50, consum:0 },
+  { name:"ET. C-TI GRATAR SUB 154X40", tura:"1T", buc:110, consum:0 },
+  { name:"ET. C-TI GRATAR SUB 86X130", tura:"1T", buc:110, consum:0 },
+
+  { name:"ET. C-TI GRATAREL 43X200", tura:"1T", buc:80, consum:3000 },
+  { name:"ET. C-TI GRATAREL 110X132", tura:"1T", buc:80, consum:3000 },
+
+  { name:"ET. CW PIEPT PUI 154X40", tura:"1T", buc:140, consum:500 },
+  { name:"ET. CW PIEPT PUI 86X130", tura:"1T", buc:140, consum:500 },
+
+  { name:"ET. GRATAREL PIC 110X132", tura:"1T", buc:93, consum:0 },
+  { name:"ET. GRATAREL PIC 43X200", tura:"1T", buc:93, consum:0 },
+
+  { name:"ET. KAISER 154X40", tura:"1R", buc:200, consum:3000 },
+  { name:"ET. KAISER 70X90 E OVALA", tura:"1R", buc:200, consum:3000 },
+
+  { name:"ET. SAL VICTORIA 75*119", tura:"1R", buc:140, consum:0 },
+  { name:"ET.SAL RUSTIC GASTRO 75*119", tura:"1T", buc:55, consum:0 },
+  { name:"ET.SAL VARA 90X70", tura:"1T", buc:200, consum:0 },
+  { name:"ET.SALAM CASA E OV 90X70", tura:"1T", buc:200, consum:0 },
+
+  { name:"ET. TERM PREMIA 154X40", tura:"1T", buc:0, consum:0 },
+  { name:"ET. TERM PREMIA 56X98", tura:"1T", buc:0, consum:0 },
+  { name:"ET.TERM PROMO 154X40", tura:"1T", buc:0, consum:0 },
+  { name:"ET. TERM PROMO 56X98", tura:"1T", buc:0, consum:0 },
+  { name:"ET. UNIV PLC 40*152", tura:"1T", buc:0, consum:0 },
+  { name:"ET. UNIV ELIT 40X152", tura:"1T", buc:0, consum:0 },
+  { name:"ET. UNIV ELIT 70X90", tura:"1T", buc:0, consum:0 }
+];
+
+// load saved data
+if (localStorage.getItem("eticheteData")) {
+    data = JSON.parse(localStorage.getItem("eticheteData"));
+}
+
+function save() {
+    localStorage.setItem("eticheteData", JSON.stringify(data));
+}
+
+function generateTable() {
+    const body = document.getElementById("tableBody");
+    body.innerHTML = "";
+
+    data.forEach((item, i) => {
+        const row = document.createElement("tr");
+        row.id = "row"+i;
+
+        row.innerHTML = `
+            <td>${item.name}</td>
+            <td><input type="number" id="inv${i}" value="${item.inventar || 0}" oninput="updateInventar(${i})"></td>
+            <td>${item.tura}</td>
+            <td>${item.buc}</td>
+            <td>${item.consum}</td>
+            <td id="stocZ${i}">${item.stocZ || 0}</td>
+            <td id="zile${i}">-</td>
+            <td id="sapt${i}">-</td>
+            <td id="status${i}" class="empty">-</td>
+            <td id="cmd${i}">-</td>
+        `;
+
+        body.appendChild(row);
+        calc(i);
+    });
+}
+
+function updateInventar(i) {
+    data[i].inventar = parseInt(document.getElementById("inv"+i).value);
+    data[i].stocZ = data[i].inventar; // stocul pornește din inventar
+    save();
+    calc(i);
+}
+
+function actualizeazaZiua() {
+    data.forEach((item, i) => {
+        if (item.consum > 0 && item.stocZ > 0) {
+            item.stocZ -= item.consum;
+            if (item.stocZ < 0) item.stocZ = 0;
+        }
+    });
+    save();
+    generateTable();
+}
+
+function calc(i) {
+    const item = data[i];
+    const consum = item.consum;
+    const stocZ = item.stocZ || 0;
+
+    const zileCell = document.getElementById("zile"+i);
+    const saptCell = document.getElementById("sapt"+i);
+    const statusCell = document.getElementById("status"+i);
+    const cmdCell = document.getElementById("cmd"+i);
+    const stocZCell = document.getElementById("stocZ"+i);
+    const row = document.getElementById("row"+i);
+
+    stocZCell.textContent = stocZ;
+
+    // dacă consum = 0 → nu calculăm nimic
+    if (consum === 0) {
+        zileCell.textContent = "-";
+        saptCell.textContent = "-";
+        statusCell.textContent = "-";
+        statusCell.className = "empty";
+        cmdCell.textContent = "-";
+        row.className = "";
+        return;
+    }
+
+    // necesar pentru 5 săptămâni (25 zile lucrătoare)
+    const necesar5 = consum * 25;
+    const deComandat = Math.max(0, necesar5 - stocZ);
+    cmdCell.textContent = deComandat;
+
+    if (stocZ <= 0) {
+        zileCell.textContent = "-";
+        saptCell.textContent = "-";
+        statusCell.textContent = "Comandă!";
+        statusCell.className = "status-bad";
+        row.className = "bad";
+        return;
+    }
+
+    const zile_lucratoare = stocZ / consum;
+    const weekenduri = Math.floor(zile_lucratoare / 5);
+    const zile_real = zile_lucratoare + weekenduri * 2;
+    const sapt = zile_real / 7;
+
+    zileCell.textContent = zile_real.toFixed(2);
+    saptCell.textContent = sapt.toFixed(2);
+
+    if (sapt < 2) {
+        statusCell.textContent = "Comandă!";
+        statusCell.className = "status-bad";
+        row.className = "bad";
+    } else {
+        statusCell.textContent = "OK";
+        statusCell.className = "status-ok";
+        row.className = "ok";
+    }
+}
+
+generateTable();
+</script>
+
+</body>
+</html>
