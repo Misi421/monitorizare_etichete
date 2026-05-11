@@ -7,33 +7,44 @@
 <style>
     body {
         font-family: "Segoe UI", Arial, sans-serif;
-        background: #eef1f5;
-        padding: 20px;
+        background: #e9edf3;
+        padding: 30px;
+        display: flex;
+        justify-content: center;
+    }
+
+    .container {
+        width: 1100px;
+        background: white;
+        padding: 25px;
+        border-radius: 14px;
+        box-shadow: 0 6px 25px rgba(0,0,0,0.12);
     }
 
     h2 {
         text-align: center;
-        margin-bottom: 20px;
-        color: #333;
+        margin-bottom: 25px;
+        color: #2c3e50;
+        font-size: 28px;
+        font-weight: 600;
     }
 
     .btn {
-        padding: 12px 25px;
-        background: #0078ff;
+        padding: 10px 20px;
+        background: linear-gradient(135deg, #0078ff, #005fcc);
         color: white;
         border: none;
-        border-radius: 6px;
-        font-size: 16px;
+        border-radius: 8px;
+        font-size: 14px;
         cursor: pointer;
-        margin-bottom: 20px;
-        display: block;
-        margin-left: auto;
-        margin-right: auto;
+        margin: 5px;
         transition: 0.2s;
+        font-weight: 600;
     }
 
     .btn:hover {
-        background: #005fcc;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     }
 
     table {
@@ -42,93 +53,201 @@
         background: white;
         border-radius: 10px;
         overflow: hidden;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
     }
 
-    th {
+    thead th {
         background: #0078ff;
         color: white;
-        padding: 10px;
+        padding: 12px;
         font-size: 15px;
+        position: sticky;
+        top: 0;
+        z-index: 2;
+    }
+
+    tbody tr:nth-child(even) {
+        background: #f7f9fc;
     }
 
     td {
         padding: 10px;
-        border-bottom: 1px solid #ddd;
+        border-bottom: 1px solid #dce3ec;
         font-size: 14px;
+        color: #2c3e50;
     }
 
     tr:hover {
-        background: #f5faff;
+        background: #eef5ff;
     }
 
     input {
-        width: 80px;
+        width: 90px;
         padding: 6px;
-        border: 1px solid #ccc;
-        border-radius: 5px;
+        border: 1px solid #bfc9d4;
+        border-radius: 6px;
         text-align: center;
+        font-size: 14px;
+        background: #fdfdfd;
     }
 
     .ok {
-        background: #d4f8d4 !important;
+        background: #dff7df !important;
     }
 
     .bad {
-        background: #ffd6d6 !important;
+        background: #ffe0e0 !important;
     }
 
     .status-ok {
         color: #0a8a0a;
         font-weight: bold;
+        background: #dff7df;
+        padding: 4px 8px;
+        border-radius: 6px;
+        display: inline-block;
     }
 
     .status-bad {
         color: #d40000;
         font-weight: bold;
+        background: #ffe0e0;
+        padding: 4px 8px;
+        border-radius: 6px;
+        display: inline-block;
     }
 
-    .empty {
-        color: #888;
-        font-style: italic;
+    #istoricTable td, #istoricTable th {
+        padding: 8px;
+        border-bottom: 1px solid #ccc;
+    }
+
+    /* Modal confirmare */
+    .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.45);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 999;
+    }
+
+    .modal {
+        background: #ffffff;
+        padding: 20px 25px;
+        border-radius: 10px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.25);
+        max-width: 420px;
+        width: 100%;
+    }
+
+    .modal h3 {
+        margin-top: 0;
+        margin-bottom: 10px;
+        font-size: 18px;
+        color: #2c3e50;
+    }
+
+    .modal-buttons {
+        text-align: right;
+        margin-top: 10px;
+    }
+
+    .modal-btn {
+        padding: 7px 14px;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        font-size: 13px;
+        margin-left: 8px;
+    }
+
+    .modal-btn-cancel {
+        background: #e0e0e0;
+        color: #333;
+    }
+
+    .modal-btn-ok {
+        background: #0078ff;
+        color: white;
     }
 </style>
 </head>
 <body>
 
-<h2>Monitorizare Etichete – UI Premium</h2>
+<script>
+// 🔐 PAROLĂ
+const parola = "1234";
+let input = prompt("Introdu parola:");
 
-<button class="btn" onclick="actualizeazaZiua()">Actualizează ziua</button>
+if (input !== parola) {
+    document.body.innerHTML = "<h2 style='text-align:center;color:red;'>Acces interzis</h2>";
+    throw new Error("Parolă greșită");
+}
+</script>
 
-<table>
-    <thead>
-        <tr>
-            <th>Etichetă</th>
-            <th>Inventar</th>
-            <th>Tura</th>
-            <th>Buc/Tura</th>
-            <th>Consum/zi</th>
-            <th>Stoc Zilnic</th>
-            <th>Zile</th>
-            <th>Săptămâni</th>
-            <th>Status</th>
-            <th>Comandă pt 5 săpt.</th>
-        </tr>
-    </thead>
-    <tbody id="tableBody"></tbody>
-</table>
+<div class="container">
+
+    <h2>Monitorizare Etichete – UI Premium</h2>
+
+    <button class="btn" onclick="actualizeazaZiua()">🔄 Actualizează ziua</button>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Etichetă</th>
+                <th>Inventar</th>
+                <th>Tura</th>
+                <th>Buc/Tura</th>
+                <th>Consum/zi</th>
+                <th>Stoc Zilnic</th>
+                <th>Zile</th>
+                <th>Săptămâni</th>
+                <th>Status</th>
+                <th>Comandă pt 8 săpt.</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+    </table>
+
+    <h3 style="margin-top:30px;">Istoric Comenzi</h3>
+    <table id="istoricTable" style="width:100%; border-collapse:collapse; margin-top:10px;">
+        <thead>
+            <tr style="background:#0078ff; color:white;">
+                <th>Data</th>
+                <th>Produs</th>
+                <th>Cantitate</th>
+                <th>Acțiune</th>
+            </tr>
+        </thead>
+        <tbody id="istoricBody"></tbody>
+    </table>
+
+</div>
+
+<!-- Modal confirmare -->
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+        <h3>Confirmare</h3>
+        <p id="modalText"></p>
+        <div class="modal-buttons">
+            <button class="modal-btn modal-btn-cancel" onclick="inchideModal()">Anulează</button>
+            <button class="modal-btn modal-btn-ok" onclick="executaActiunea()">Confirmă</button>
+        </div>
+    </div>
+</div>
 
 <script>
 let data = [
-  { name:"ET. VIRSLI 43X200", tura:"1T", buc:110, consum:0 },
-  { name:"ET.VIRSLI PLC 110X132", tura:"1T", buc:110, consum:0 },
+  { name:"ET. VIRSLI 43X200", tura:"1T", buc:110, consum:400 },
+  { name:"ET.VIRSLI PLC 110X132", tura:"1T", buc:110, consum:400 },
   { name:"ET. C-TI BICAZ 86X130", tura:"1T", buc:50, consum:0 },
-  { name:"ET. C-TI CU SUNCA 154X40", tura:"1T", buc:48, consum:0 },
-  { name:"ET. C-TI CU SUNCA 86X130", tura:"1T", buc:48, consum:0 },
-  { name:"ET. CABANOS 154X40", tura:"1T", buc:50, consum:0 },
-  { name:"ET. CABANOS 86X130", tura:"1T", buc:50, consum:0 },
-  { name:"ET. C-TI GRATAR SUB 154X40", tura:"1T", buc:110, consum:0 },
-  { name:"ET. C-TI GRATAR SUB 86X130", tura:"1T", buc:110, consum:0 },
+  { name:"ET. C-TI CU SUNCA 154X40", tura:"1T", buc:48, consum:250 },
+  { name:"ET. C-TI CU SUNCA 86X130", tura:"1T", buc:48, consum:250 },
+  { name:"ET. CABANOS 154X40", tura:"1T", buc:50, consum:150 },
+  { name:"ET. CABANOS 86X130", tura:"1T", buc:50, consum:150 },
+  { name:"ET. C-TI GRATAR SUB 154X40", tura:"1T", buc:110, consum:250 },
+  { name:"ET. C-TI GRATAR SUB 86X130", tura:"1T", buc:110, consum:250 },
 
   { name:"ET. C-TI GRATAREL 43X200", tura:"1T", buc:80, consum:3000 },
   { name:"ET. C-TI GRATAREL 110X132", tura:"1T", buc:80, consum:3000 },
@@ -136,10 +255,10 @@ let data = [
   { name:"ET. CW PIEPT PUI 154X40", tura:"1T", buc:140, consum:500 },
   { name:"ET. CW PIEPT PUI 86X130", tura:"1T", buc:140, consum:500 },
 
-  { name:"ET. GRATAREL PIC 110X132", tura:"1T", buc:93, consum:0 },
-  { name:"ET. GRATAREL PIC 43X200", tura:"1T", buc:93, consum:0 },
+  { name:"ET. GRATAREL PIC 110X132", tura:"1T", buc:93, consum:500 },
+  { name:"ET. GRATAREL PIC 43X200", tura:"1T", buc:93, consum:500 },
 
-  { name:"ET. KAISER 154X40", tura:"1R", buc:200, consum:3000 },
+  { name:"ET. KAISER 154X40", tura:"1R", buc:200, consum:700 },
   { name:"ET. KAISER 70X90 E OVALA", tura:"1R", buc:200, consum:3000 },
 
   { name:"ET. SAL VICTORIA 75*119", tura:"1R", buc:140, consum:0 },
@@ -150,13 +269,13 @@ let data = [
   { name:"ET. TERM PREMIA 154X40", tura:"1T", buc:0, consum:0 },
   { name:"ET. TERM PREMIA 56X98", tura:"1T", buc:0, consum:0 },
   { name:"ET.TERM PROMO 154X40", tura:"1T", buc:0, consum:0 },
-  { name:"ET. TERM PROMO 56X98", tura:"1T", buc:0, consum:0 },
+  { name:"ET. TERM PROMO 56X98", tura:"1T", buc:0, consum:1000 },
   { name:"ET. UNIV PLC 40*152", tura:"1T", buc:0, consum:0 },
-  { name:"ET. UNIV ELIT 40X152", tura:"1T", buc:0, consum:0 },
-  { name:"ET. UNIV ELIT 70X90", tura:"1T", buc:0, consum:0 }
+  { name:"ET. UNIV ELIT 40X152", tura:"1T", buc:0, consum:6000 },
+  { name:"ET. UNIV ELIT 70X90", tura:"1T", buc:0, consum:5000 }
 ];
 
-// load saved data
+// Încarcă datele salvate
 if (localStorage.getItem("eticheteData")) {
     data = JSON.parse(localStorage.getItem("eticheteData"));
 }
@@ -183,23 +302,25 @@ function generateTable() {
             <td id="zile${i}">-</td>
             <td id="sapt${i}">-</td>
             <td id="status${i}" class="empty">-</td>
-            <td id="cmd${i}">-</td>
+            <td id="cmd${i}" onclick="comanda(${i})" style="cursor:pointer; font-weight:bold; color:#0078ff;">-</td>
         `;
 
         body.appendChild(row);
         calc(i);
     });
+
+    afiseazaIstoric();
 }
 
 function updateInventar(i) {
-    data[i].inventar = parseInt(document.getElementById("inv"+i).value);
-    data[i].stocZ = data[i].inventar; // stocul pornește din inventar
+    data[i].inventar = parseInt(document.getElementById("inv"+i).value) || 0;
+    data[i].stocZ = data[i].inventar;
     save();
     calc(i);
 }
 
 function actualizeazaZiua() {
-    data.forEach((item, i) => {
+    data.forEach((item) => {
         if (item.consum > 0 && item.stocZ > 0) {
             item.stocZ -= item.consum;
             if (item.stocZ < 0) item.stocZ = 0;
@@ -223,7 +344,6 @@ function calc(i) {
 
     stocZCell.textContent = stocZ;
 
-    // dacă consum = 0 → nu calculăm nimic
     if (consum === 0) {
         zileCell.textContent = "-";
         saptCell.textContent = "-";
@@ -234,9 +354,8 @@ function calc(i) {
         return;
     }
 
-    // necesar pentru 5 săptămâni (25 zile lucrătoare)
-    const necesar5 = consum * 25;
-    const deComandat = Math.max(0, necesar5 - stocZ);
+    const necesar8 = consum * 40;
+    const deComandat = Math.max(0, necesar8 - stocZ);
     cmdCell.textContent = deComandat;
 
     if (stocZ <= 0) {
@@ -265,6 +384,97 @@ function calc(i) {
         statusCell.className = "status-ok";
         row.className = "ok";
     }
+}
+
+// ---------------- COMANDĂ + MODAL ----------------
+
+let pendingAction = null;
+let pendingIndex = null;
+
+function comanda(i) {
+    const item = data[i];
+    const cmd = parseInt(document.getElementById("cmd"+i).textContent);
+
+    if (!cmd || cmd <= 0) return;
+
+    pendingAction = "comanda";
+    pendingIndex = i;
+
+    document.getElementById("modalText").textContent =
+        `Sigur vrei să adaugi ${cmd} bucăți la inventarul pentru:\n${item.name}?`;
+
+    document.getElementById("modalOverlay").style.display = "flex";
+}
+
+function stergeIstoric(index) {
+    pendingAction = "stergeIstoric";
+    pendingIndex = index;
+
+    document.getElementById("modalText").textContent =
+        "Sigur vrei să ștergi această înregistrare din istoric?";
+
+    document.getElementById("modalOverlay").style.display = "flex";
+}
+
+function inchideModal() {
+    pendingAction = null;
+    pendingIndex = null;
+    document.getElementById("modalOverlay").style.display = "none";
+}
+
+function executaActiunea() {
+    if (pendingAction === "comanda") {
+        const i = pendingIndex;
+        const item = data[i];
+        const cmd = parseInt(document.getElementById("cmd"+i).textContent);
+
+        item.inventar = (item.inventar || 0) + cmd;
+        item.stocZ = item.inventar;
+
+        let istoric = JSON.parse(localStorage.getItem("istoricComenzi")) || [];
+        istoric.push({
+            data: new Date().toLocaleString("ro-RO"),
+            produs: item.name,
+            cantitate: cmd
+        });
+        localStorage.setItem("istoricComenzi", JSON.stringify(istoric));
+
+        save();
+        generateTable();
+    }
+
+    if (pendingAction === "stergeIstoric") {
+        let istoric = JSON.parse(localStorage.getItem("istoricComenzi")) || [];
+        istoric.splice(pendingIndex, 1);
+        localStorage.setItem("istoricComenzi", JSON.stringify(istoric));
+        afiseazaIstoric();
+    }
+
+    inchideModal();
+}
+
+// ---------------- ISTORIC ----------------
+
+function afiseazaIstoric() {
+    let istoric = JSON.parse(localStorage.getItem("istoricComenzi")) || [];
+    const body = document.getElementById("istoricBody");
+    body.innerHTML = "";
+
+    istoric.forEach((entry, index) => {
+        body.innerHTML += `
+            <tr>
+                <td>${entry.data}</td>
+                <td>${entry.produs}</td>
+                <td>${entry.cantitate}</td>
+                <td>
+                    <button onclick="stergeIstoric(${index})"
+                        style="padding:4px 8px; background:#d9534f; color:white; border:none; border-radius:5px; cursor:pointer;">
+                        Șterge
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
 }
 
 generateTable();
