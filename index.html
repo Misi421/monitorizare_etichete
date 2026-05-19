@@ -13,27 +13,108 @@
 
     h2 {
         text-align: center;
-        margin-bottom: 20px;
+        margin-bottom: 5px;
         color: #333;
     }
 
-    .btn {
-        padding: 12px 25px;
-        background: #0078ff;
-        color: white;
-        border: none;
-        border-radius: 6px;
-        font-size: 16px;
-        cursor: pointer;
-        margin-bottom: 20px;
-        display: block;
-        margin-left: auto;
-        margin-right: auto;
-        transition: 0.2s;
+    .dashboard-top {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+        margin: 0 auto 25px auto;
+        max-width: 500px;
     }
 
-    .btn:hover {
-        background: #005fcc;
+    .calendar-container {
+        background: white;
+        width: 100%;
+        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        text-align: center;
+        box-sizing: border-box;
+    }
+
+    .current-date {
+        font-size: 18px;
+        font-weight: bold;
+        color: #0078ff;
+        margin-bottom: 5px;
+    }
+
+    .current-time {
+        font-size: 14px;
+        color: #666;
+    }
+
+    .auto-status {
+        font-size: 11px;
+        color: #888;
+        margin-top: 5px;
+        font-style: italic;
+    }
+
+    .alert-container {
+        background: #fff3cd;
+        border-left: 5px solid #ffc107;
+        color: #856404;
+        width: 100%;
+        padding: 15px;
+        border-radius: 6px;
+        box-sizing: border-box;
+        display: none;
+        text-align: center;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    .alert-container.critical {
+        background: #f8d7da;
+        border-left: 5px solid #dc3545;
+        color: #721c24;
+    }
+
+    .alert-title {
+        font-weight: bold;
+        font-size: 15px;
+        margin-bottom: 8px;
+    }
+
+    .btn-report {
+        padding: 8px 15px;
+        background: #dc3545;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-size: 13px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: 0.2s;
+        margin-top: 5px;
+    }
+
+    .btn-report:hover {
+        background: #bd2130;
+    }
+
+    /* Stil buton editare consum */
+    .btn-edit-consum {
+        padding: 4px 8px;
+        background: #f0f0f0;
+        color: #333;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 11px;
+        cursor: pointer;
+        margin-left: 5px;
+        font-weight: bold;
+        transition: 0.2s;
+    }
+    
+    .btn-edit-consum.active {
+        background: #28a745;
+        color: white;
+        border-color: #28a745;
     }
 
     table {
@@ -98,7 +179,18 @@
 
 <h2>Monitorizare Etichete – UI Premium</h2>
 
-<button class="btn" onclick="actualizeazaZiua()">Actualizează ziua</button>
+<div class="dashboard-top">
+    <div class="calendar-container">
+        <div class="current-date" id="displayDate">Se încarcă data...</div>
+        <div class="current-time" id="displayTime">--:--:--</div>
+        <div class="auto-status" id="autoStatus">Verificare stoc...</div>
+    </div>
+
+    <div class="alert-container" id="notificationAlert">
+        <div class="alert-title" id="alertText">Verificare necesar comandă...</div>
+        <button class="btn-report" onclick="copiazaRaportComanda()">Copiază listă comandă</button>
+    </div>
+</div>
 
 <table>
     <thead>
@@ -107,7 +199,10 @@
             <th>Inventar</th>
             <th>Tura</th>
             <th>Buc/Tura</th>
-            <th>Consum/zi</th>
+            <th>
+                Consum/zi 
+                <button class="btn-edit-consum" id="btnEditConsum" onclick="comutaEditareConsum()">✏️ Modifică</button>
+            </th>
             <th>Stoc Zilnic</th>
             <th>Zile</th>
             <th>Săptămâni</th>
@@ -122,7 +217,6 @@
 let data = [
   { name:"ET. VIRSLI 43X200", tura:"1T", buc:110, consum:0 },
   { name:"ET.VIRSLI PLC 110X132", tura:"1T", buc:110, consum:0 },
-  { name:"ET. C-TI BICAZ 86X130", tura:"1T", buc:50, consum:0 },
   { name:"ET. C-TI CU SUNCA 154X40", tura:"1T", buc:48, consum:0 },
   { name:"ET. C-TI CU SUNCA 86X130", tura:"1T", buc:48, consum:0 },
   { name:"ET. CABANOS 154X40", tura:"1T", buc:50, consum:0 },
@@ -156,13 +250,73 @@ let data = [
   { name:"ET. UNIV ELIT 70X90", tura:"1T", buc:0, consum:0 }
 ];
 
-// load saved data
+let esteInModEditareConsum = false;
+
 if (localStorage.getItem("eticheteData")) {
     data = JSON.parse(localStorage.getItem("eticheteData"));
 }
 
 function save() {
     localStorage.setItem("eticheteData", JSON.stringify(data));
+}
+
+function pornesteCeas() {
+    function actualizeazaTimp() {
+        const acum = new Date();
+        const optiuniData = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        let dataFormatata = acum.toLocaleDateString('ro-RO', optiuniData);
+        dataFormatata = dataFormatata.charAt(0).toUpperCase() + dataFormatata.slice(1);
+        
+        const oraFormatata = acum.toLocaleTimeString('ro-RO');
+
+        document.getElementById("displayDate").textContent = dataFormatata;
+        document.getElementById("displayTime").textContent = oraFormatata;
+    }
+    actualizeazaTimp();
+    setInterval(actualizeazaTimp, 1000);
+}
+
+function proceseazaConsumAutomat() {
+    const azi = new Date();
+    azi.setHours(0,0,0,0);
+
+    let ultimaVerificareStr = localStorage.getItem("ultimaVerificareData");
+    
+    if (!ultimaVerificareStr) {
+        localStorage.setItem("ultimaVerificareData", azi.toISOString());
+        document.getElementById("autoStatus").textContent = "Sistem monitorizare automată activat.";
+        return;
+    }
+
+    let ultimaVerificare = new Date(ultimaVerificareStr);
+    ultimaVerificare.setHours(0,0,0,0);
+
+    let zileLucratoareScazute = 0;
+    let dataCurenta = new Date(ultimaVerificare);
+
+    while (dataCurenta < azi) {
+        dataCurenta.setDate(dataCurenta.getDate() + 1);
+        const ziSaptamana = dataCurenta.getDay(); 
+        
+        if (ziSaptamana !== 0 && ziSaptamana !== 6) {
+            data.forEach((item) => {
+                if (item.consum > 0 && item.stocZ > 0) {
+                    item.stocZ -= item.consum;
+                    if (item.stocZ < 0) item.stocZ = 0;
+                }
+            });
+            zileLucratoareScazute++;
+        }
+    }
+
+    if (zileLucratoareScazute > 0) {
+        save();
+        document.getElementById("autoStatus").textContent = `Stoc actualizat automat pentru ultimele ${zileLucratoareScazute} zile lucrătoare.`;
+    } else {
+        document.getElementById("autoStatus").textContent = "Stocul este actualizat la zi.";
+    }
+
+    localStorage.setItem("ultimaVerificareData", azi.toISOString());
 }
 
 function generateTable() {
@@ -173,12 +327,17 @@ function generateTable() {
         const row = document.createElement("tr");
         row.id = "row"+i;
 
+        // Randarea dinamica a coloanei consum (text simplu sau casuta input)
+        const consumCelulă = esteInModEditareConsum 
+            ? `<input type="number" id="con${i}" value="${item.consum}" oninput="updateConsumDirect(${i})">`
+            : `${item.consum}`;
+
         row.innerHTML = `
             <td>${item.name}</td>
             <td><input type="number" id="inv${i}" value="${item.inventar || 0}" oninput="updateInventar(${i})"></td>
             <td>${item.tura}</td>
             <td>${item.buc}</td>
-            <td>${item.consum}</td>
+            <td>${consumCelulă}</td>
             <td id="stocZ${i}">${item.stocZ || 0}</td>
             <td id="zile${i}">-</td>
             <td id="sapt${i}">-</td>
@@ -189,23 +348,40 @@ function generateTable() {
         body.appendChild(row);
         calc(i);
     });
+
+    actualizeazaSistemNotificare();
 }
 
 function updateInventar(i) {
-    data[i].inventar = parseInt(document.getElementById("inv"+i).value);
-    data[i].stocZ = data[i].inventar; // stocul pornește din inventar
+    data[i].inventar = parseInt(document.getElementById("inv"+i).value) || 0;
+    data[i].stocZ = data[i].inventar; 
+    save();
+    calc(i);
+    actualizeazaSistemNotificare();
+}
+
+// Functie care preia live schimbarile cand scrii in casuta de consum
+function updateConsumDirect(i) {
+    data[i].consum = parseInt(document.getElementById("con"+i).value) || 0;
     save();
     calc(i);
 }
 
-function actualizeazaZiua() {
-    data.forEach((item, i) => {
-        if (item.consum > 0 && item.stocZ > 0) {
-            item.stocZ -= item.consum;
-            if (item.stocZ < 0) item.stocZ = 0;
-        }
-    });
-    save();
+// Functia butonului din antet
+function comutaEditareConsum() {
+    const btn = document.getElementById("btnEditConsum");
+    esteInModEditareConsum = !esteInModEditareConsum;
+
+    if (esteInModEditareConsum) {
+        btn.textContent = "Salvează";
+        btn.classList.add("active");
+    } else {
+        btn.textContent = "Modifică";
+        btn.classList.remove("active");
+        actualizeazaSistemNotificare(); // Reevaluam alertele la finalul salvarii
+    }
+    
+    // Re-generam tabelul ca sa schimbe textul in casute de input sau invers
     generateTable();
 }
 
@@ -223,7 +399,6 @@ function calc(i) {
 
     stocZCell.textContent = stocZ;
 
-    // dacă consum = 0 → nu calculăm nimic
     if (consum === 0) {
         zileCell.textContent = "-";
         saptCell.textContent = "-";
@@ -234,7 +409,6 @@ function calc(i) {
         return;
     }
 
-    // necesar pentru 5 săptămâni (25 zile lucrătoare)
     const necesar5 = consum * 25;
     const deComandat = Math.max(0, necesar5 - stocZ);
     cmdCell.textContent = deComandat;
@@ -267,7 +441,73 @@ function calc(i) {
     }
 }
 
-generateTable();
+function actualizeazaSistemNotificare() {
+    const alertaBox = document.getElementById("notificationAlert");
+    const alertaText = document.getElementById("alertText");
+    
+    let produseDeComandat = [];
+
+    data.forEach((item) => {
+        if (item.consum > 0) {
+            const stocZ = item.stocZ || 0;
+            const zile_lucratoare = stocZ / item.consum;
+            const weekenduri = Math.floor(zile_lucratoare / 5);
+            const sapt = (zile_lucratoare + weekenduri * 2) / 7;
+
+            if (stocZ <= 0 || sapt < 2) {
+                const necesar5 = item.consum * 25;
+                const deComandat = Math.max(0, necesar5 - stocZ);
+                produseDeComandat.push({ name: item.name, cantitate: deComandat });
+            }
+        }
+    });
+
+    if (produseDeComandat.length > 0) {
+        alertaBox.style.display = "block";
+        alertaBox.className = "alert-container critical";
+        alertaText.innerHTML = `<b>Alertă Stoc Ora 07:00:</b> Ai <b>${produseDeComandat.length} etichete</b> care necesită comandă urgentă!`;
+    } else {
+        alertaBox.style.display = "none";
+    }
+}
+
+function copiazaRaportComanda() {
+    let textRaport = `RAPORT NECESAR ETICHETE - ${new Date().toLocaleDateString('ro-RO')}\n\n`;
+    let areProduse = false;
+
+    data.forEach((item) => {
+        if (item.consum > 0) {
+            const stocZ = item.stocZ || 0;
+            const zile_lucratoare = stocZ / item.consum;
+            const weekenduri = Math.floor(zile_lucratoare / 5);
+            const sapt = (zile_lucratoare + weekenduri * 2) / 7;
+
+            if (stocZ <= 0 || sapt < 2) {
+                const necesar5 = item.consum * 25;
+                const deComandat = Math.max(0, necesar5 - stocZ);
+                textRaport += `• ${item.name} -> Necesar comandă: ${deComandat} buc.\n`;
+                areProduse = true;
+            }
+        }
+    });
+
+    if (!areProduse) {
+        alert("Toate stocurile sunt în regulă, nu e nimic de comandat!");
+        return;
+    }
+
+
+    navigator.clipboard.writeText(textRaport).then(() => {
+        alert("Lista de comandă a fost copiată în memoria dispozitivului! O poți lipi direct pe WhatsApp sau Mail.");
+    }).catch(err => {
+        alert("Eroare la copiere.");
+    });
+}
+
+// Pornire aplicatie
+proceseazaConsumAutomat(); 
+generateTable();           
+pornesteCeas();            
 </script>
 
 </body>
